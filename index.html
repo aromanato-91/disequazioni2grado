@@ -11,7 +11,7 @@
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- React via CDN (non lo usiamo, ma è caricato come volevi) -->
+    <!-- React via CDN (caricato ma NON usato, nessun problema) -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 
@@ -149,14 +149,14 @@
             <!-- Pulsanti Azione e Feedback -->
             <div class="space-y-4">
                 <div class="flex flex-col md:flex-row justify-center items-center gap-4">
-                    <button id="resetButton" class="w-full md:w-auto px-8 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all durata-200 flex items-center justify-center gap-2 group">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-180 transition-transform durata-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button id="resetButton" class="w-full md:w-auto px-8 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-2 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         RESET
                     </button>
 
-                    <button id="checkButton" class="w-full md:w-auto flex-grow max-w-md px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-600 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all durata-200 flex items-center justify-center gap-2">
+                    <button id="checkButton" class="w-full md:w-auto flex-grow max-w-md px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-600 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
                         <span>VERIFICA TUTTO</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -164,7 +164,7 @@
                     </button>
                 </div>
 
-                <div id="solutionDisplay" class="bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all durata-300 transform">
+                <div id="solutionDisplay" class="bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all duration-300 transform">
                     Seleziona le aree sul grafico e clicca sull'opzione corretta a destra.
                 </div>
             </div>
@@ -172,7 +172,6 @@
         </div>
     </div>
 
-    <!-- TUTTO IL TUO JS ORIGINALE -->
     <script type="module">
         const canvas = document.getElementById('graphCanvas');
         const ctx = canvas.getContext('2d');
@@ -437,7 +436,7 @@
             ctx.fillStyle = 'rgba(254, 202, 202, 0.4)';
             const isTargetPositive = sign === '>' || sign === '>=';
             if (isTargetPositive) ctx.fillRect(0, originY, CANVAS_WIDTH, CANVAS_HEIGHT - originY);
-            else ctx.fillRect(0, 0, CANVAS_HEIGHT, originY);
+            else ctx.fillRect(0, 0, CANVAS_WIDTH, originY);
         }
 
         function drawStudentSelection(roots) {
@@ -844,7 +843,7 @@
             updateOptionsDOM();
             
             adjustZoom(a, b, c);
-            resetSelection(); 
+            selectedBlocks = [false, false, false];
             includedRoots = [false, false]; 
             render();
         }
@@ -862,7 +861,7 @@
 
         function resetFeedback() {
             solutionDisplay.innerHTML = 'Seleziona il grafico e la soluzione algebrica.';
-            solutionDisplay.className = 'bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all durata-300';
+            solutionDisplay.className = 'bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all duration-300';
         }
 
         function init() {
