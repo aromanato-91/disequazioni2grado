@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disequazioni di 2° Grado</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        #graphCanvas {
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            background-color: #ffffff;
+            touch-action: none; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+            border-width: 2px;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+        }
+        .option-btn.selected {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5);
+        }
+        .option-btn.correct-visual {
+            background-color: #10b981; /* Green-500 */
+            border-color: #10b981;
+            color: white;
+        }
+        .option-btn.wrong-visual {
+            background-color: #ef4444; /* Red-500 */
+            border-color: #ef4444;
+            color: white;
+            opacity: 0.5;
+        }
+    </style>
+
+    <!-- React + ReactDOM UMD + Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
+    <div id="root"></div>
+
+    <!-- App React + tua logica JS -->
+    <script type="text/babel" data-presets="env,react">
+        function App() {
+            return (
+                <div className="w-full max-w-5xl bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+                    <div className="bg-gray-50/50 p-6 text-center border-b border-gray-100">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-600 mb-2">
+                            DISEQUAZIONI DI 2° GRADO
+                        </h1>
+                        <p className="text-gray-500 font-medium">
+                            1. Disegna la soluzione sul grafico &nbsp;|&nbsp; 2. Scegli la scrittura corretta
+                        </p>
+                    </div>
+
+                    <div className="p-6 md:p-8 space-y-8">
+                        {/* Pannello di controllo */}
+                        <div className="bg-indigo-50 rounded-2xl p-6 shadow-inner border border-indigo-100 flex flex-wrap justify-center items-center gap-6">
+                            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-indigo-100">
+                                <div className="flex flex-col items-center">
+                                    <label className="text-xs font-bold text-indigo-400 uppercase">a</label>
+                                    <input
+                                        type="number"
+                                        id="inputA"
+                                        defaultValue="1"
+                                        step="0.1"
+                                        className="w-16 text-center font-bold text-xl text-indigo-700 bg-transparent outline-none border-b-2 border-transparent focus:border-indigo-500 transition-colors"
+                                    />
+                                </div>
+                                <span className="text-gray-300 text-2xl font-light">|</span>
+                                <div className="flex flex-col items-center">
+                                    <label className="text-xs font-bold text-indigo-400 uppercase">b</label>
+                                    <input
+                                        type="number"
+                                        id="inputB"
+                                        defaultValue="-4"
+                                        step="0.1"
+                                        className="w-16 text-center font-bold text-xl text-indigo-700 bg-transparent outline-none border-b-2 border-transparent focus:border-indigo-500 transition-colors"
+                                    />
+                                </div>
+                                <span className="text-gray-300 text-2xl font-light">|</span>
+                                <div className="flex flex-col items-center">
+                                    <label className="text-xs font-bold text-indigo-400 uppercase">c</label>
+                                    <input
+                                        type="number"
+                                        id="inputC"
+                                        defaultValue="3"
+                                        step="0.1"
+                                        className="w-16 text-center font-bold text-xl text-indigo-700 bg-transparent outline-none border-b-2 border-transparent focus:border-indigo-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-white px-5 py-3 rounded-xl shadow-sm border border-indigo-100">
+                                <div
+                                    className="font-mono text-xl md:text-2xl text-gray-700 font-bold"
+                                    id="equationDisplay"
+                                ></div>
+                                <div className="relative">
+                                    <select
+                                        id="inequalitySign"
+                                        className="appearance-none bg-indigo-600 text-white font-bold text-xl py-2 pl-4 pr-8 rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors shadow-md outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        defaultValue=">"
+                                    >
+                                        <option value=">">&gt; 0</option>
+                                        <option value=">=">&ge; 0</option>
+                                        <option value="<">&lt; 0</option>
+                                        <option value="<=">&le; 0</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                                        <svg
+                                            className="fill-current h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Colonna sinistra: grafico */}
+                            <div className="lg:col-span-2 relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 to-indigo-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="relative bg-white rounded-2xl p-1 md:p-2 border border-gray-200 shadow-xl">
+                                    <canvas
+                                        id="graphCanvas"
+                                        width="800"
+                                        height="450"
+                                        className="w-full h-auto"
+                                    ></canvas>
+                                    <div
+                                        id="instructionOverlay"
+                                        className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur text-sm font-semibold text-indigo-600 px-4 py-2 rounded-full shadow-lg border border-indigo-100 pointer-events-none transition-opacity duration-500"
+                                    >
+                                        👆 Clicca su intervalli e pallini
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Colonna destra: opzioni algebriche */}
+                            <div className="lg:col-span-1 flex flex-col gap-4">
+                                <h3 className="text-lg font-bold text-gray-700 text-center">
+                                    Come si scrive la soluzione?
+                                </h3>
+                                <div id="algebraicOptionsContainer" className="grid grid-cols-1 gap-3 flex-grow"></div>
+                            </div>
+                        </div>
+
+                        {/* Pulsanti azione e feedback */}
+                        <div className="space-y-4">
+                            <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+                                <button
+                                    id="resetButton"
+                                    className="w-full md:w-auto px-8 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-2 group"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 group-hover:rotate-180 transition-transform duration-300"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                        />
+                                    </svg>
+                                    RESET
+                                </button>
+
+                                <button
+                                    id="checkButton"
+                                    className="w-full md:w-auto flex-grow max-w-md px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-600 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+                                >
+                                    <span>VERIFICA TUTTO</span>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div
+                                id="solutionDisplay"
+                                className="bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all duration-300 transform"
+                            >
+                                Seleziona le aree sul grafico e clicca sull&apos;opzione corretta a destra.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Monta l'app React
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+        // --- TUTTA LA TUA LOGICA JS ORIGINALE, quasi invariata ---
+
+        (function () {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const inputA = document.getElementById('inputA');
+            const inputB = document.getElementById('inputB');
+            const inputC = document.getElementById('inputC');
+            const inequalitySign = document.getElementById('inequalitySign');
+            const equationDisplay = document.getElementById('equationDisplay');
+            const solutionDisplay = document.getElementById('solutionDisplay');
+            const resetButton = document.getElementById('resetButton');
+            const checkButton = document.getElementById('checkButton');
+            const instructionOverlay = document.getElementById('instructionOverlay');
+            const optionsContainer = document.getElementById('algebraicOptionsContainer');
+            
+            let CANVAS_WIDTH = canvas.width;
+            let CANVAS_HEIGHT = canvas.height;
+            let scaleX = 30; 
+            let scaleY = 30; 
+            let originX = CANVAS_WIDTH / 2; 
+            let originY = CANVAS_HEIGHT / 2; 
+
+            let selectedBlocks = [false, false, false];
+            let includedRoots = [false, false];
+            let selectedAlgebraicIndex = -1; 
+            let currentOptions = []; 
+            
+            const ROOT_RADIUS = 8;
+            const X_AXIS_TOLERANCE = 35; 
+            const EPSILON = 0.0001; 
+
+            const f = (a, b, c, x) => a * x * x + b * x + c;
+
+            function toCanvasX(xMat) {
+                if (xMat === -Infinity) return 0;
+                if (xMat === Infinity) return CANVAS_WIDTH;
+                return originX + xMat * scaleX;
+            }
+            function toCanvasY(yMat) { return originY - yMat * scaleY; }
+            function toMatX(xPix) { return (xPix - originX) / scaleX; }
+
+            function getCanvasPoint(event) {
+                const rect = canvas.getBoundingClientRect();
+                let clientX, clientY;
+                if (event.touches && event.touches.length > 0) {
+                    clientX = event.touches[0].clientX;
+                    clientY = event.touches[0].clientY;
+                } else {
+                    clientX = event.clientX;
+                    clientY = event.clientY;
+                }
+                const xRelative = clientX - rect.left;
+                const yRelative = clientY - rect.top;
+                const scaleXFactor = CANVAS_WIDTH / rect.width;
+                const scaleYFactor = CANVAS_HEIGHT / rect.height;
+                return { x: xRelative * scaleXFactor, y: yRelative * scaleYFactor };
+            }
+
+            function getRoots(a, b, c) {
+                if (a === 0) return [];
+                const delta = b * b - 4 * a * c;
+                if (delta < 0) return [];
+                if (delta === 0) return [-b / (2 * a)];
+                const sqrtDelta = Math.sqrt(delta);
+                const x1 = (-b - sqrtDelta) / (2 * a);
+                const x2 = (-b + sqrtDelta) / (2 * a);
+                return [x1, x2].sort((a, b) => a - b);
+            }
+
+            function getVertex(a, b, c) {
+                if (a === 0) return null;
+                const xv = -b / (2 * a);
+                const yv = f(a, b, c, xv);
+                return { x: xv, y: yv };
+            }
+
+            function formatNum(n) {
+                return Number.isInteger(n) ? n.toString() : n.toFixed(2);
+            }
+
+            function generateAlgebraicOptions(a, b, c, sign) {
+                const roots = getRoots(a, b, c);
+                const r1 = roots.length > 0 ? formatNum(roots[0]) : null;
+                const r2 = roots.length > 1 ? formatNum(roots[1]) : null;
+                const r0 = roots.length === 1 ? formatNum(roots[0]) : null;
+
+                let correctLabel = "";
+                let distractors = [];
+
+                const isStrict = sign === '>' || sign === '<';
+                const isPosQuery = sign === '>' || sign === '>=';
+                const aPos = a > 0;
+                
+                if (roots.length === 2) {
+                    const extStrict = `x < ${r1} ∨ x > ${r2}`;
+                    const extLoose = `x ≤ ${r1} ∨ x ≥ ${r2}`;
+                    const intStrict = `${r1} < x < ${r2}`;
+                    const intLoose = `${r1} ≤ x ≤ ${r2}`;
+
+                    const isExternal = (aPos && isPosQuery) || (!aPos && !isPosQuery);
+                    
+                    if (isExternal) {
+                        correctLabel = isStrict ? extStrict : extLoose;
+                    } else {
+                        correctLabel = isStrict ? intStrict : intLoose;
+                    }
+                    distractors = [extStrict, extLoose, intStrict, intLoose].filter(l => l !== correctLabel);
+                    
+                } else if (roots.length === 1) {
+                    const eq = `x = ${r0}`;
+                    const neq = `x ≠ ${r0}`;
+                    const all = `∀x ∈ ℝ`;
+                    const none = `Impossibile (∅)`;
+                    
+                    if (aPos) {
+                        if (sign === '>') correctLabel = neq;
+                        else if (sign === '>=') correctLabel = all;
+                        else if (sign === '<') correctLabel = none;
+                        else correctLabel = eq;
+                    } else {
+                        if (sign === '>') correctLabel = none;
+                        else if (sign === '>=') correctLabel = eq;
+                        else if (sign === '<') correctLabel = neq;
+                        else correctLabel = all;
+                    }
+                    distractors = [eq, neq, all, none].filter(l => l !== correctLabel);
+
+                } else {
+                    const all = `∀x ∈ ℝ`;
+                    const none = `Impossibile (∅)`;
+                    const bogus1 = `x > 0`;
+                    const bogus2 = `x < 0`;
+
+                    let isAll = false;
+                    if (aPos && isPosQuery) isAll = true;
+                    if (!aPos && !isPosQuery) isAll = true;
+
+                    correctLabel = isAll ? all : none;
+                    distractors = [all, none, bogus1, bogus2].filter(l => l !== correctLabel);
+                }
+
+                let options = [{ label: correctLabel, isCorrect: true }];
+                for (let i = 0; i < Math.min(3, distractors.length); i++) {
+                    options.push({ label: distractors[i], isCorrect: false });
+                }
+                options.sort(() => Math.random() - 0.5);
+                return options;
+            }
+
+            function updateOptionsDOM() {
+                optionsContainer.innerHTML = '';
+                currentOptions.forEach((opt, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = `option-btn w-full p-3 rounded-lg text-gray-700 font-semibold bg-white border-2 border-gray-200 text-sm md:text-base`;
+                    if (index === selectedAlgebraicIndex) {
+                        btn.classList.add('selected');
+                    }
+                    btn.textContent = opt.label;
+                    btn.onclick = () => {
+                        selectedAlgebraicIndex = index;
+                        Array.from(optionsContainer.children).forEach((child, idx) => {
+                            if (idx === index) child.classList.add('selected');
+                            else child.classList.remove('selected');
+                        });
+                        resetFeedback(); 
+                    };
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            function getCorrectSolutionSet(a, b, c, sign) {
+                const roots = getRoots(a, b, c);
+                const isStrict = sign === '>' || sign === '<';
+                const signCheck = sign === '>' || sign === '>=';
+                
+                if (roots.length === 0) {
+                    if (a > 0 && signCheck) return [[-Infinity, Infinity]];
+                    if (a < 0 && !signCheck) return [[-Infinity, Infinity]];
+                    return [];
+                }
+                if (roots.length === 1) {
+                    const x0 = roots[0];
+                    if (a > 0) {
+                        if (sign === '>') return [[-Infinity, x0 - EPSILON], [x0 + EPSILON, Infinity]];
+                        if (sign === '>=') return [[-Infinity, Infinity]];
+                        if (sign === '<') return [];
+                        if (sign === '<=') return [[x0, x0]];
+                    } else { 
+                        if (sign === '>') return [];
+                        if (sign === '>=') return [[x0, x0]];
+                        if (sign === '<') return [[-Infinity, x0 - EPSILON], [x0 + EPSILON, Infinity]];
+                        if (sign === '<=') return [[-Infinity, Infinity]];
+                    }
+                    return [];
+                }
+                const x1 = roots[0];
+                const x2 = roots[1];
+                const x1_start = isStrict ? x1 + EPSILON : x1;
+                const x1_end = isStrict ? x1 - EPSILON : x1;
+                const x2_start = isStrict ? x2 + EPSILON : x2;
+                const x2_end = isStrict ? x2 - EPSILON : x2;
+
+                if (a > 0) {
+                    if (signCheck) return [[-Infinity, x1_end], [x2_start, Infinity]];
+                    else return [[x1_start, x2_end]];
+                } else {
+                    if (signCheck) return [[x1_start, x2_end]];
+                    else return [[-Infinity, x1_end], [x2_start, Infinity]];
+                }
+            }
+
+            function drawAxes() {
+                ctx.strokeStyle = '#94a3b8'; 
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(CANVAS_WIDTH, originY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, CANVAS_HEIGHT); ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'bold 14px "Fredoka", sans-serif';
+
+                const stepX = Math.round(100 / scaleX) || 1;
+                for (let xMat = -Math.floor(CANVAS_WIDTH / (2 * scaleX)); xMat <= Math.ceil(CANVAS_WIDTH / (2 * scaleX)); xMat += stepX) {
+                    if (xMat !== 0) {
+                        const xPix = toCanvasX(xMat);
+                        ctx.fillText(xMat.toString(), xPix - 5, originY + 20);
+                        ctx.beginPath(); ctx.moveTo(xPix, originY - 4); ctx.lineTo(xPix, originY + 4); ctx.stroke();
+                    }
+                }
+                const stepY = Math.round(100 / scaleY) || 1;
+                for (let yMat = -Math.floor(CANVAS_HEIGHT / (2 * scaleY)); yMat <= Math.ceil(CANVAS_HEIGHT / (2 * scaleY)); yMat += stepY) {
+                    if (yMat !== 0) {
+                        const yPix = toCanvasY(yMat);
+                        ctx.fillText(yMat.toString(), originX + 8, yPix + 5);
+                        ctx.beginPath(); ctx.moveTo(originX - 4, yPix); ctx.lineTo(originX + 4, yPix); ctx.stroke();
+                    }
+                }
+            }
+
+            function drawParabola(a, b, c) {
+                ctx.strokeStyle = '#4f46e5'; 
+                ctx.lineWidth = 4;
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                let first = true;
+                for (let xPix = 0; xPix <= CANVAS_WIDTH; xPix+=2) { 
+                    const xMat = toMatX(xPix);
+                    const yMat = f(a, b, c, xMat);
+                    const yPix = toCanvasY(yMat);
+                    if (yPix > -1000 && yPix < CANVAS_HEIGHT + 1000) {
+                        if (first) { ctx.moveTo(xPix, yPix); first = false; } else { ctx.lineTo(xPix, yPix); }
+                    } else { first = true; }
+                }
+                ctx.stroke();
+            }
+
+            function shadeSolutionArea(a, b, c, sign) {
+                ctx.fillStyle = 'rgba(254, 202, 202, 0.4)';
+                const isTargetPositive = sign === '>' || sign === '>=';
+                if (isTargetPositive) ctx.fillRect(0, originY, CANVAS_WIDTH, CANVAS_HEIGHT - originY);
+                else ctx.fillRect(0, 0, CANVAS_WIDTH, originY);
+            }
+
+            function drawStudentSelection(roots) {
+                const hasTwoRoots = roots.length === 2;
+                let x1 = hasTwoRoots ? roots[0] : null;
+                let x2 = hasTwoRoots ? roots[1] : null;
+
+                ctx.fillStyle = 'rgba(99, 102, 241, 0.6)'; 
+                
+                const drawBlock = (start, end) => {
+                    let startPix = toCanvasX(start);
+                    let endPix = toCanvasX(end);
+                    const width = endPix - startPix;
+                    ctx.fillRect(startPix, originY - 12, width, 24);
+                };
+
+                if (selectedBlocks[0] && x1 !== null) drawBlock(-Infinity, x1);
+                if (selectedBlocks[1] && x1 !== null && x2 !== null) drawBlock(x1, x2);
+                if (selectedBlocks[2] && x2 !== null) drawBlock(x2, Infinity);
+                if (roots.length <= 1 && selectedBlocks[1]) drawBlock(toMatX(0), toMatX(CANVAS_WIDTH));
+                
+                const rootsToDraw = roots.length === 2 ? roots : (roots.length === 1 ? [roots[0]] : []);
+                if (rootsToDraw.length > 0) {
+                    rootsToDraw.forEach((rootValue, index) => {
+                        if (index >= 2) return;
+                        const xPix = toCanvasX(rootValue);
+                        ctx.beginPath();
+                        ctx.arc(xPix, originY, ROOT_RADIUS, 0, 2 * Math.PI);
+                        
+                        if (includedRoots[index]) {
+                            ctx.fillStyle = '#4f46e5'; ctx.fill();
+                            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+                        } else {
+                            ctx.fillStyle = '#ffffff'; ctx.fill();
+                            ctx.strokeStyle = '#4f46e5'; ctx.lineWidth = 3; ctx.stroke();
+                        }
+                    });
+                }
+            }
+
+            function getStudentSolutionSet(roots) {
+                const solution = [];
+                const hasTwoRoots = roots.length === 2;
+                const hasOneRoot = roots.length === 1;
+
+                if (hasTwoRoots) {
+                    const x1 = roots[0];
+                    const x2 = roots[1];
+                    if (selectedBlocks[0]) solution.push([-Infinity, includedRoots[0] ? x1 : x1 - EPSILON]);
+                    if (selectedBlocks[1]) solution.push([includedRoots[0] ? x1 : x1 + EPSILON, includedRoots[1] ? x2 : x2 - EPSILON]);
+                    if (selectedBlocks[2]) solution.push([includedRoots[1] ? x2 : x2 + EPSILON, Infinity]);
+                } else if (hasOneRoot) {
+                    const x0 = roots[0];
+                    if (selectedBlocks[1]) {
+                        if (includedRoots[0]) {
+                            const a = parseFloat(inputA.value);
+                            const sign = inequalitySign.value;
+                            const isR = (a > 0 && sign === '>=') || (a < 0 && sign === '<=');
+                            if (isR) solution.push([-Infinity, Infinity]);
+                            else if (sign === '>=' || sign === '<=') solution.push([x0, x0]);
+                            else solution.push([x0, x0]); 
+                        } else {
+                            solution.push([-Infinity, x0 - EPSILON], [x0 + EPSILON, Infinity]);
+                        }
+                    }
+                } else { 
+                    if (selectedBlocks[1]) solution.push([-Infinity, Infinity]);
+                }
+                return normalizeIntervals(solution);
+            }
+
+            function compareIntervalSets(setA, setB, tolerance = 0.00001) {
+                if (setA.length === 0 && setB.length === 0) return true;
+                if (setA.length !== setB.length) return false;
+
+                for (let i = 0; i < setA.length; i++) {
+                    const [a1, a2] = setA[i];
+                    const [b1, b2] = setB[i];
+                    const checkStart = (a1 === -Infinity && b1 === -Infinity) || Math.abs(a1 - b1) < tolerance;
+                    const checkEnd = (a2 === Infinity && b2 === Infinity) || Math.abs(a2 - b2) < tolerance;
+                    const isPointA = Math.abs(a1 - a2) < EPSILON * 2;
+                    const isPointB = Math.abs(b1 - b2) < EPSILON * 2;
+                    if (isPointA && isPointB) { if (Math.abs(a1 - b1) < tolerance) continue; }
+                    if (!checkStart || !checkEnd) return false;
+                }
+                return true;
+            }
+
+            function normalizeIntervals(intervals) {
+                return intervals
+                    .map(i => i.slice().sort((a, b) => (a === -Infinity ? -Infinity : a) - (b === -Infinity ? -Infinity : b)))
+                    .sort((a, b) => (a[0] === -Infinity ? -Infinity : a[0]) - (b[0] === -Infinity ? -Infinity : b[0]));
+            }
+
+            function drawFinalFeedback(solutionStatus, correctIntervals) {
+                const a = parseFloat(inputA.value);
+                const b = parseFloat(inputB.value);
+                const c = parseFloat(inputC.value);
+                const roots = getRoots(a, b, c);
+
+                const isRootIncluded = (rootValue) => {
+                    for (const [x1, x2] of correctIntervals) {
+                        if (Math.abs(x1 - rootValue) < EPSILON || Math.abs(x2 - rootValue) < EPSILON) return true;
+                    }
+                    if (correctIntervals.some(([x1, x2]) => Math.abs(x1 - x2) < EPSILON && Math.abs(x1 - rootValue) < EPSILON)) return true;
+                    return false;
+                };
+
+                ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                shadeSolutionArea(a, b, c, inequalitySign.value); 
+                drawParabola(a, b, c);
+                drawAxes(); 
+
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.7)'; 
+                correctIntervals.forEach(interval => {
+                    let [x1, x2] = interval;
+                    let startPix = toCanvasX(x1);
+                    let endPix = toCanvasX(x2);
+                    const width = endPix - startPix;
+                    ctx.fillRect(startPix, originY - 12, width, 24);
+                });
+                
+                const isStrict = inequalitySign.value === '>' || inequalitySign.value === '<';
+                if (roots.length >= 1) {
+                    roots.forEach(rootValue => {
+                        const xPix = toCanvasX(rootValue);
+                        let included = isRootIncluded(rootValue);
+                        if (isStrict) included = false;
+
+                        ctx.beginPath();
+                        ctx.arc(xPix, originY, ROOT_RADIUS, 0, 2 * Math.PI);
+                        ctx.fillStyle = included ? '#10b981' : '#ffffff'; 
+                        ctx.fill();
+                        ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.stroke();
+                    });
+                }
+
+                const graphIsWrong = !(solutionStatus === 'correct' || solutionStatus === 'algebra_wrong');
+                
+                if (graphIsWrong && (selectedBlocks.some(b => b) || (roots.length === 1 && includedRoots[0]))) {
+                     const studentSolutionSet = getStudentSolutionSet(roots);
+                     studentSolutionSet.forEach(interval => {
+                        let [startMat, endMat] = interval;
+                        let startPix = toCanvasX(startMat);
+                        let endPix = toCanvasX(endMat);
+                        const width = endPix - startPix;
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.5)'; 
+                        ctx.fillRect(startPix, originY - 12, width, 24);
+                        
+                        if (roots.length >= 1) {
+                            roots.forEach((rootValue, index) => {
+                                 if (index >= 2) return;
+                                 const xPix = toCanvasX(rootValue);
+                                 const correctIncluded = isRootIncluded(rootValue);
+                                 const studentIncluded = includedRoots[index];
+                                 let effectiveCorrectIncluded = correctIncluded;
+                                 if (isStrict) effectiveCorrectIncluded = false;
+
+                                 if (effectiveCorrectIncluded !== studentIncluded) {
+                                    ctx.beginPath();
+                                    ctx.arc(xPix, originY, ROOT_RADIUS + 3, 0, 2 * Math.PI);
+                                    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3; ctx.stroke();
+                                 }
+                            });
+                        }
+                    });
+                }
+
+                let message = '';
+                let style = '';
+
+                if (solutionStatus === 'correct') {
+                    message = `
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-2xl">🎉</span>
+                            <span class="font-bold text-green-700">TUTTO CORRETTO! SEI UN GRANDE!</span>
+                        </div>`;
+                    style = 'mt-4 p-4 rounded-xl bg-green-100 border border-green-200 shadow-md transform scale-105 transition-all';
+                    Array.from(optionsContainer.children).forEach(btn => {
+                        if (btn.classList.contains('selected')) btn.classList.add('correct-visual');
+                    });
+                } else if (solutionStatus === 'algebra_wrong') {
+                    message = `
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-2xl">⚠️</span>
+                            <span class="font-bold text-orange-700">Grafico OK, ma la scrittura è sbagliata!</span>
+                        </div>`;
+                    style = 'mt-4 p-4 rounded-xl bg-orange-50 border border-orange-200 shadow-md shake';
+                    Array.from(optionsContainer.children).forEach((btn, idx) => {
+                        if (idx === selectedAlgebraicIndex) btn.classList.add('wrong-visual');
+                        if (currentOptions[idx].isCorrect) btn.classList.add('correct-visual');
+                    });
+                } else {
+                    message = `
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-2xl">❌</span>
+                            <span class="font-bold text-red-700">Grafico Errato</span>
+                        </div>
+                        <div class="text-sm text-red-600 mt-1">Osserva la soluzione in verde.</div>`;
+                    style = 'mt-4 p-4 rounded-xl bg-red-50 border border-red-200 shadow-md shake';
+                }
+                solutionDisplay.innerHTML = message;
+                solutionDisplay.className = style;
+            }
+
+            function render() {
+                CANVAS_WIDTH = canvas.clientWidth; 
+                CANVAS_HEIGHT = canvas.clientHeight;
+                canvas.width = CANVAS_WIDTH;
+                canvas.height = CANVAS_HEIGHT;
+
+                const a = parseFloat(inputA.value);
+                const b = parseFloat(inputB.value);
+                const c = parseFloat(inputC.value);
+                
+                adjustZoom(a, b, c);
+                
+                ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                shadeSolutionArea(a, b, c, inequalitySign.value); 
+                drawParabola(a, b, c);
+                drawAxes(); 
+                
+                const roots = getRoots(a, b, c);
+                drawStudentSelection(roots);
+                updateEquationDisplay(a, b, c);
+            }
+
+            function adjustZoom(a, b, c) {
+                const roots = getRoots(a, b, c);
+                const vertex = getVertex(a, b, c);
+                
+                let xMatMin = Infinity, xMatMax = -Infinity;
+                let yMatMin = Infinity, yMatMax = -Infinity;
+
+                const includePoint = (x, y) => {
+                    if (x < xMatMin) xMatMin = x;
+                    if (x > xMatMax) xMatMax = x;
+                    if (y < yMatMin) yMatMin = y;
+                    if (y > yMatMax) yMatMax = y;
+                };
+
+                includePoint(0, 0);
+
+                if (vertex) {
+                    includePoint(vertex.x, vertex.y);
+                } else {
+                    includePoint(0, c);
+                }
+
+                roots.forEach(r => includePoint(r, 0));
+
+                const margin = 2;
+                xMatMin -= margin; xMatMax += margin;
+                yMatMin -= margin; yMatMax += margin;
+
+                const xMatRange = xMatMax - xMatMin;
+                const yMatRange = yMatMax - yMatMin;
+                
+                scaleX = CANVAS_WIDTH / xMatRange;
+                scaleY = CANVAS_HEIGHT / yMatRange;
+
+                let finalScale = Math.min(scaleX, scaleY);
+                
+                if (roots.length === 2) {
+                    const dist = Math.abs(roots[1] - roots[0]);
+                    if (dist * finalScale < 120) {
+                        finalScale = 120 / dist;
+                    }
+                }
+
+                finalScale = Math.max(finalScale, 30);
+                if (finalScale > 150) finalScale = 150;
+
+                scaleX = finalScale;
+                scaleY = finalScale;
+
+                let centerXMat;
+                if (roots.length === 2) {
+                    centerXMat = (roots[0] + roots[1]) / 2;
+                } else if (vertex) {
+                    centerXMat = vertex.x;
+                } else {
+                    centerXMat = 0;
+                }
+                
+                let centerYMat = vertex ? vertex.y / 2 : 0;
+
+                originX = CANVAS_WIDTH / 2 - centerXMat * scaleX; 
+                originY = CANVAS_HEIGHT / 2 + centerYMat * scaleY; 
+            }
+
+            function updateEquationDisplay(a, b, c) {
+                let eq = "";
+                const formatCoeff = (val, term) => {
+                    if (val === 0) return "";
+                    const absVal = Math.abs(val);
+                    const sign = val > 0 ? "+" : "-";
+                    let valStr = Number.isInteger(absVal) ? absVal.toString() : absVal.toFixed(1);
+                    if (absVal === 1 && term !== "") valStr = "";
+                    if (term === 'x²') return (val > 0 ? '' : '-') + valStr + term;
+                    else return sign + ' ' + (valStr || '1') + term;
+                };
+                eq += formatCoeff(a, 'x²');
+                eq += formatCoeff(b, 'x');
+                eq += formatCoeff(c, '');
+                eq = eq.replace(/\+\s*\-/, '- ').trim();
+                if (eq.startsWith('+')) eq = eq.substring(1).trim();
+                if (a === 0 && b === 0) eq = c.toString();
+                else if (a === 0) eq = eq.replace('x²', '').trim();
+                if (eq === "") eq = "0";
+                
+                eq = eq.replace(/\+/g, ' + ').replace(/-/g, ' - ');
+                if (eq.startsWith(' - ')) eq = '-' + eq.substring(3);
+
+                equationDisplay.innerHTML = `<span class="text-indigo-600">${eq}</span>`;
+            }
+
+            function handleCanvasClick(event) {
+                instructionOverlay.style.opacity = '0';
+
+                const { x, y } = getCanvasPoint(event);
+                const a = parseFloat(inputA.value);
+                const b = parseFloat(inputB.value);
+                const c = parseFloat(inputC.value);
+                const sign = inequalitySign.value;
+                const roots = getRoots(a, b, c);
+                const hasTwoRoots = roots.length === 2;
+                const hasOneRoot = roots.length === 1;
+
+                if (hasTwoRoots) {
+                    const x1 = roots[0];
+                    const x2 = roots[1];
+                    const xPix1 = toCanvasX(x1);
+                    const xPix2 = toCanvasX(x2);
+                    
+                    if (Math.abs(x - xPix1) < ROOT_RADIUS * 3 && Math.abs(y - originY) < ROOT_RADIUS * 3) {
+                        includedRoots[0] = !includedRoots[0];
+                        resetFeedback(); render(); return;
+                    }
+                    if (Math.abs(x - xPix2) < ROOT_RADIUS * 3 && Math.abs(y - originY) < ROOT_RADIUS * 3) {
+                        includedRoots[1] = !includedRoots[1];
+                        resetFeedback(); render(); return;
+                    }
+                    
+                    if (Math.abs(y - originY) < X_AXIS_TOLERANCE) {
+                        const xMat = toMatX(x);
+                        if (xMat < x1) selectedBlocks[0] = !selectedBlocks[0];
+                        else if (xMat > x1 && xMat < x2) selectedBlocks[1] = !selectedBlocks[1];
+                        else if (xMat > x2) selectedBlocks[2] = !selectedBlocks[2];
+                    }
+                } else if (hasOneRoot || roots.length === 0) {
+                    if (Math.abs(y - originY) < X_AXIS_TOLERANCE) {
+                        const x0 = roots.length === 1 ? roots[0] : null;
+                        if (hasOneRoot && Math.abs(x - toCanvasX(x0)) < ROOT_RADIUS * 3 && Math.abs(y - originY) < ROOT_RADIUS * 3) {
+                            includedRoots[0] = !includedRoots[0];
+                            const isPointSolutionCase = (a > 0 && sign === '<=') || (a < 0 && sign === '>=');
+                            if (isPointSolutionCase) selectedBlocks[1] = includedRoots[0];
+                        } else {
+                            selectedBlocks[1] = !selectedBlocks[1];
+                            if (!selectedBlocks[1] && hasOneRoot) includedRoots[0] = false;
+                        }
+                    }
+                }
+                resetFeedback();
+                render();
+            }
+
+            function checkSolution() {
+                const a = parseFloat(inputA.value);
+                const b = parseFloat(inputB.value);
+                const c = parseFloat(inputC.value);
+                const sign = inequalitySign.value;
+                const roots = getRoots(a, b, c);
+                const correctSolutionSet = getCorrectSolutionSet(a, b, c, sign);
+                const studentSolutionSet = getStudentSolutionSet(roots);
+                
+                let graphCorrect = compareIntervalSets(correctSolutionSet, studentSolutionSet);
+                let algebraCorrect = false;
+
+                if (selectedAlgebraicIndex !== -1 && currentOptions.length > selectedAlgebraicIndex) {
+                    if (currentOptions[selectedAlgebraicIndex].isCorrect) {
+                        algebraCorrect = true;
+                    }
+                } else if (currentOptions.length > 0) {
+                    algebraCorrect = false;
+                }
+
+                let solutionStatus = 'incorrect';
+                if (graphCorrect && algebraCorrect) solutionStatus = 'correct';
+                else if (graphCorrect && !algebraCorrect) solutionStatus = 'algebra_wrong';
+                else solutionStatus = 'incorrect';
+
+                drawFinalFeedback(solutionStatus, normalizeIntervals(correctSolutionSet));
+            }
+
+            function handleInput() {
+                const a = parseFloat(inputA.value);
+                const b = parseFloat(inputB.value);
+                const c = parseFloat(inputC.value);
+                const sign = inequalitySign.value;
+                
+                currentOptions = generateAlgebraicOptions(a, b, c, sign);
+                selectedAlgebraicIndex = -1;
+                updateOptionsDOM();
+                
+                adjustZoom(a, b, c);
+                resetSelectionInternal(); 
+                includedRoots = [false, false]; 
+                render();
+            }
+
+            function resetSelectionInternal() {
+                selectedBlocks = [false, false, false];
+                includedRoots = [false, false];
+                selectedAlgebraicIndex = -1;
+                Array.from(optionsContainer.children).forEach(child => {
+                    child.classList.remove('selected', 'correct-visual', 'wrong-visual');
+                });
+                resetFeedback();
+            }
+
+            function resetSelection() {
+                resetSelectionInternal();
+                render();
+            }
+
+            function resetFeedback() {
+                solutionDisplay.innerHTML = 'Seleziona il grafico e la soluzione algebrica.';
+                solutionDisplay.className = 'bg-blue-50 text-blue-800 p-4 rounded-xl text-center font-medium border border-blue-100 shadow-sm transition-all duration-300';
+            }
+
+            function init() {
+                includedRoots = [false, false];
+                handleInput();
+            }
+
+            [inputA, inputB, inputC, inequalitySign].forEach(el => {
+                el.addEventListener('input', handleInput);
+            });
+
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('mousedown', (e) => e.preventDefault()); 
+            canvas.addEventListener('touchstart', (e) => e.preventDefault()); 
+
+            checkButton.addEventListener('click', checkSolution);
+            resetButton.addEventListener('click', resetSelection);
+
+            window.addEventListener('resize', () => {
+                adjustZoom(parseFloat(inputA.value), parseFloat(inputB.value), parseFloat(inputC.value));
+                render();
+            });
+
+            // Inizializzazione immediata (React ha già renderizzato il DOM)
+            init();
+        })();
+    </script>
+</body>
+</html>
